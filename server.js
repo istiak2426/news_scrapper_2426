@@ -5,6 +5,10 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const app = express();
 
+app.get('/', (req, res) => {
+  res.send('Server is working');
+});
+
 app.use(express.json());
 app.use(express.static('public'));
 
@@ -108,9 +112,5 @@ app.post('/scrape', async (req, res) => {
   }
 });
 
-// Simple test route
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/public/index.html');
-});
-
+// Export the app for Vercel (no app.listen)
 module.exports = app;
