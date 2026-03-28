@@ -117,6 +117,22 @@
             100% { transform: rotate(360deg); }
         }
         
+        .welcome-message {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        
+        .welcome-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        
+        .welcome-message p {
+            margin: 10px 0;
+            font-size: 1rem;
+        }
+        
         .stats {
             display: flex;
             justify-content: space-between;
@@ -132,7 +148,6 @@
             color: #667eea;
         }
         
-        /* Mobile-friendly table - convert to cards on small screens */
         .table-container {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
@@ -196,7 +211,6 @@
             border-radius: 12px;
         }
         
-        /* Card view for mobile (optional alternative to table) */
         @media (max-width: 768px) {
             body {
                 padding: 10px;
@@ -227,7 +241,6 @@
                 margin-bottom: 0;
             }
             
-            /* Make table more readable on mobile */
             th, td {
                 padding: 8px;
                 font-size: 0.85rem;
@@ -254,7 +267,6 @@
             }
         }
         
-        /* Toast notification */
         .toast {
             position: fixed;
             bottom: 20px;
@@ -293,9 +305,10 @@
         </div>
         
         <div class="results" id="results">
-            <div class="loading">
-                <div class="spinner"></div>
-                <p>Enter a URL above to start scraping</p>
+            <div class="welcome-message">
+                <div class="welcome-icon">🔍</div>
+                <p>Ready to scrape news articles</p>
+                <p style="font-size: 0.9rem;">Enter a URL above and click Fetch News</p>
             </div>
         </div>
     </div>
@@ -306,7 +319,6 @@
         const resultsDiv = document.getElementById('results');
         let currentArticles = [];
 
-        // Show toast notification
         function showToast(message, isError = false) {
             const toast = document.createElement('div');
             toast.className = 'toast';
@@ -323,7 +335,6 @@
                 return;
             }
 
-            // Validate URL
             try {
                 new URL(url);
             } catch (e) {
@@ -331,6 +342,7 @@
                 return;
             }
 
+            // Show spinner only when fetching starts
             resultsDiv.innerHTML = `
                 <div class="loading">
                     <div class="spinner"></div>
@@ -418,8 +430,6 @@
                 if (m === '<') return '&lt;';
                 if (m === '>') return '&gt;';
                 return m;
-            }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
-                return c;
             });
         }
 
@@ -445,7 +455,6 @@
             showToast('✅ Excel file downloaded!');
         }
 
-        // Allow Enter key to submit
         urlInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 fetchBtn.click();
