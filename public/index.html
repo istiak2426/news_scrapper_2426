@@ -328,6 +328,36 @@
             setTimeout(() => toast.remove(), 3000);
         }
 
+        // 🔧 NEW: Format time from UTC to local timezone
+        function formatTime(timeString) {
+            if (!timeString || timeString === 'N/A') return 'N/A';
+            
+            try {
+                // Check if it's already in ISO format (from server)
+                if (timeString.includes('T') && timeString.includes('Z')) {
+                    const date = new Date(timeString);
+                    return date.toLocaleString();
+                }
+                
+                // If it's a string like "3/28/2026, 2:30:00 PM" try parsing it
+                const date = new Date(timeString);
+                if (!isNaN(date.getTime())) {
+                    return date.toLocaleString();
+                }
+                
+                // Fallback: try to parse as UTC and add local offset
+                const parsedDate = new Date(timeString + ' UTC');
+                if (!isNaN(parsedDate.getTime())) {
+                    return parsedDate.toLocaleString();
+                }
+                
+                return timeString; // Return as is if all parsing fails
+            } catch (e) {
+                console.warn('Time parsing error:', e);
+                return timeString;
+            }
+        }
+
         fetchBtn.addEventListener('click', async () => {
             const url = urlInput.value.trim();
             if (!url) {
@@ -342,7 +372,6 @@
                 return;
             }
 
-            // Show spinner only when fetching starts
             resultsDiv.innerHTML = `
                 <div class="loading">
                     <div class="spinner"></div>
@@ -379,14 +408,14 @@
                         <button id="exportExcelBtn" class="export-btn">📥 Export to Excel</button>
                     </div>
                     <div class="table-container">
-                        <table>
+                         <table>
                             <thead>
                                 <tr>
                                     <th>#</th>
                                     <th>Title</th>
                                     <th>Link</th>
                                     <th>Content Preview</th>
-                                    <th>Scraped Time</th>
+                                    <th>Scraped Time (Local)</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -397,13 +426,16 @@
                         ? article.innerText.substring(0, 150) + '...' 
                         : article.innerText;
                     
+                    // 🔧 Format the time for display
+                    const formattedTime = formatTime(article.scrapedTime);
+                    
                     html += `
                         <tr>
                             <td>${idx + 1}</td>
                             <td class="article-title">${escapeHtml(article.title)}</td>
                             <td><a href="${article.link}" target="_blank" class="article-link" rel="noopener noreferrer">🔗 View</a></td>
                             <td class="inner-text">${escapeHtml(preview)}</td>
-                            <td class="scraped-time">${escapeHtml(article.scrapedTime || 'N/A')}</td>
+                            <td class="scraped-time">${escapeHtml(formattedTime)}</td>
                         </tr>
                     `;
                 });
@@ -439,12 +471,12 @@
                 return;
             }
 
-            const headers = ['Title', 'Link', 'Inner Text', 'Scraped Time'];
+            const headers = ['Title', 'Link', 'Inner Text', 'Scraped Time (Local)'];
             const rows = currentArticles.map(article => [
                 article.title,
                 article.link,
                 article.innerText,
-                article.scrapedTime || ''
+                formatTime(article.scrapedTime) // Format time for Excel too
             ]);
 
             const sheetData = [headers, ...rows];
