@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Scraper Web App</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        input { width: 70%; padding: 8px; font-size: 16px; }
+        button { padding: 8px 16px; font-size: 16px; cursor: pointer; margin: 5px; }
+        .results { margin-top: 20px; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
+        th { background-color: #f2f2f2; }
+        .error { color: red; }
+        .export-btn { background-color: #4CAF50; color: white; border: none; }
+        .export-btn:hover { background-color: #45a049; }
+    </style>
+    <!-- SheetJS library for Excel export -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+    <h1>News Scraper</h1>
+    <div>
+        <input type="text" id="urlInput" placeholder="Enter URL (e.g., https://www.prothomalo.com/)" style="width: 60%;">
+        <button id="fetchBtn">Fetch News (up to 100 articles)</button>
+    </div>
+    <div class="results" id="results">
+        <p>Results will appear here...</p>
+    </div>
+
+    <script>
+        const fetchBtn = document.getElementById('fetchBtn');
+        const urlInput = document.getElementById('urlInput');
+        const resultsDiv = document.getElementById('results');
+        let currentArticles = []; // store scraped data for export
+
+        fetchBtn.addEventListener('click', async () => {
+            const url = urlInput.value.trim();
+            if (!url) {
+                alert('Please enter a URL');
+                return;
+            }
+
+            resultsDiv.innerHTML = '<p>⏳ Scraping up to 100 articles... This may take a minute or two.</p>';
+            currentArticles = []; // clear previous
+
+            try {
+                const response = await fetch('/scrape', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'Unknown error');
+                }
+
+                if (data.articles.length === 0) {
+                    resultsDiv.innerHTML = '<p>⚠️ No articles found on this page.</p>';
+                    return;
+                }
+
+                currentArticles = data.articles; // store for export
+
+                // Build table with Scraped Time column
+                let html = `<h3>Found ${data.articles.length} articles</h3>
+                            <button id="exportExcelBtn" class="export-btn">📊 Export to Excel</button>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Title</th>
+                                        <th>Link</th>
+                                        <th>Inner Text</th>
+                                        <th>Scraped Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+                data.articles.forEach((article, idx) => {
+                    html += `<tr>
+                                <td>${idx + 1}</td>
+                                <td><strong>${escapeHtml(article.title)}</strong></td>
+                                <td><a href="${article.link}" target="_blank">Link</a></td>
+                                <td>${escapeHtml(article.innerText)}</td>
+                                <td>${escapeHtml(article.scrapedTime || 'N/A')}</td>
+                             </tr>`;
+                });
+                html += `</tbody></table>`;
+                resultsDiv.innerHTML = html;
+
+                // Attach export button event
+                document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
+
+            } catch (error) {
+                resultsDiv.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+            }
+        });
+
+        // Simple XSS protection
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+                return c;
+            });
+        }
+
+        // Export to Excel using SheetJS
+        function exportToExcel() {
+            if (!currentArticles || currentArticles.length === 0) {
+                alert('No data to export.');
+                return;
+            }
+
+            // Prepare data for Excel: array of arrays (headers + rows)
+            const headers = ['Title', 'Link', 'Inner Text', 'Scraped Time'];
+            const rows = currentArticles.map(article => [
+                article.title,
+                article.link,
+                article.innerText,
+                article.scrapedTime || ''
+            ]);
+
+            const sheetData = [headers, ...rows];
+            const ws = XLSX.utils.aoa_to_sheet(sheetData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Scraped News');
+            XLSX.writeFile(wb, `scraped_news_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.xlsx`);
+        }
+    </script>
+</body>
+</html>
