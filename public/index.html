@@ -16,7 +16,6 @@
         .export-btn { background-color: #4CAF50; color: white; border: none; }
         .export-btn:hover { background-color: #45a049; }
     </style>
-    <!-- SheetJS library for Excel export -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -33,7 +32,7 @@
         const fetchBtn = document.getElementById('fetchBtn');
         const urlInput = document.getElementById('urlInput');
         const resultsDiv = document.getElementById('results');
-        let currentArticles = []; // store scraped data for export
+        let currentArticles = [];
 
         fetchBtn.addEventListener('click', async () => {
             const url = urlInput.value.trim();
@@ -43,7 +42,7 @@
             }
 
             resultsDiv.innerHTML = '<p>⏳ Scraping up to 100 articles... This may take a minute or two.</p>';
-            currentArticles = []; // clear previous
+            currentArticles = [];
 
             try {
                 const response = await fetch('/scrape', {
@@ -63,12 +62,11 @@
                     return;
                 }
 
-                currentArticles = data.articles; // store for export
+                currentArticles = data.articles;
 
-                // Build table with Scraped Time column
                 let html = `<h3>Found ${data.articles.length} articles</h3>
                             <button id="exportExcelBtn" class="export-btn">📊 Export to Excel</button>
-                            <table>
+                             <table>
                                 <thead>
                                     <tr>
                                         <th>#</th>
@@ -91,15 +89,12 @@
                 html += `</tbody></table>`;
                 resultsDiv.innerHTML = html;
 
-                // Attach export button event
                 document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
-
             } catch (error) {
                 resultsDiv.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
             }
         });
 
-        // Simple XSS protection
         function escapeHtml(str) {
             if (!str) return '';
             return str.replace(/[&<>]/g, function(m) {
@@ -107,19 +102,15 @@
                 if (m === '<') return '&lt;';
                 if (m === '>') return '&gt;';
                 return m;
-            }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
-                return c;
             });
         }
 
-        // Export to Excel using SheetJS
         function exportToExcel() {
             if (!currentArticles || currentArticles.length === 0) {
                 alert('No data to export.');
                 return;
             }
 
-            // Prepare data for Excel: array of arrays (headers + rows)
             const headers = ['Title', 'Link', 'Inner Text', 'Scraped Time'];
             const rows = currentArticles.map(article => [
                 article.title,

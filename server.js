@@ -5,10 +5,6 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const app = express();
 
-app.get('/', (req, res) => {
-  res.send('Server is working');
-});
-
 app.use(express.json());
 app.use(express.static('public'));
 
@@ -43,7 +39,7 @@ async function fetchArticleText(url) {
   }
 }
 
-app.post('/', async (req, res) => {
+app.post('/scrape', async (req, res) => {
   const { url } = req.body;
   if (!url) return res.status(400).json({ error: 'URL is required' });
 
@@ -56,7 +52,6 @@ app.post('/', async (req, res) => {
     const articles = [];
     const seenLinks = new Set();
 
-    // 1. Look for article containers
     const containers = [
       '.story-card', '.card', 'article', '.article-card', '.news-item',
       '.story', '.featured-item', '.item', '.post', '.entry'
@@ -82,7 +77,6 @@ app.post('/', async (req, res) => {
       });
     }
 
-    // 2. Fallback: any link with long text
     if (articles.length < 100) {
       $('a').each((i, el) => {
         if (articles.length >= 100) return false;
@@ -100,12 +94,11 @@ app.post('/', async (req, res) => {
       });
     }
 
-    // Fetch inner text (no Puppeteer, just axios)
     for (let i = 0; i < articles.length; i++) {
       const article = articles[i];
       article.innerText = await fetchArticleText(article.link);
       article.scrapedTime = new Date().toLocaleString();
-      await new Promise(resolve => setTimeout(resolve, 500)); // shorter delay for Vercel
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
 
     res.json({ success: true, articles });
@@ -115,5 +108,9 @@ app.post('/', async (req, res) => {
   }
 });
 
-// Export the app for Vercel (no app.listen)
+// Simple test route
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/public/index.html');
+});
+
 module.exports = app;
