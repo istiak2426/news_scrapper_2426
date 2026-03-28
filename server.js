@@ -4,7 +4,10 @@ const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const app = express();
-const PORT = 3000;
+
+app.get('/', (req, res) => {
+  res.send('Server is working');
+});
 
 app.use(express.json());
 app.use(express.static('public'));
@@ -40,7 +43,7 @@ async function fetchArticleText(url) {
   }
 }
 
-app.post('/scrape', async (req, res) => {
+app.post('/', async (req, res) => {
   const { url } = req.body;
   if (!url) return res.status(400).json({ error: 'URL is required' });
 
@@ -97,14 +100,12 @@ app.post('/scrape', async (req, res) => {
       });
     }
 
-    console.log(`Found ${articles.length} unique links. Fetching content...`);
-
+    // Fetch inner text (no Puppeteer, just axios)
     for (let i = 0; i < articles.length; i++) {
       const article = articles[i];
-      console.log(`[${i+1}/${articles.length}] Fetching: ${article.title.substring(0, 50)}...`);
       article.innerText = await fetchArticleText(article.link);
       article.scrapedTime = new Date().toLocaleString();
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 500)); // shorter delay for Vercel
     }
 
     res.json({ success: true, articles });
@@ -114,4 +115,5 @@ app.post('/scrape', async (req, res) => {
   }
 });
 
+// Export the app for Vercel (no app.listen)
 module.exports = app;
