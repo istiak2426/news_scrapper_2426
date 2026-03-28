@@ -5,6 +5,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const app = express();
 
+// Serve the frontend
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/public/index.html');
 });
@@ -98,10 +99,13 @@ app.post('/scrape', async (req, res) => {
       });
     }
 
+    // Fetch inner text for each article
     for (let i = 0; i < articles.length; i++) {
       const article = articles[i];
+      console.log(`[${i+1}/${articles.length}] Fetching: ${article.title.substring(0, 50)}...`);
       article.innerText = await fetchArticleText(article.link);
-      article.scrapedTime = new Date().toLocaleString();
+      // 🔧 FIX: Send UTC ISO format for proper timezone conversion
+      article.scrapedTime = new Date().toISOString();
       await new Promise(resolve => setTimeout(resolve, 500));
     }
 
