@@ -5,9 +5,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const app = express();
 
-app.get('/', (req, res) => {
-  res.send('Server is working');
-});
+
 
 app.use(express.json());
 app.use(express.static('public'));
