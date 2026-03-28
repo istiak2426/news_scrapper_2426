@@ -2,30 +2,302 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>News Scraper Web App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>News Scraper - Mobile-Friendly Web App</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        input { width: 70%; padding: 8px; font-size: 16px; }
-        button { padding: 8px 16px; font-size: 16px; cursor: pointer; margin: 5px; }
-        .results { margin-top: 20px; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
-        th { background-color: #f2f2f2; }
-        .error { color: red; }
-        .export-btn { background-color: #4CAF50; color: white; border: none; }
-        .export-btn:hover { background-color: #45a049; }
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 1.8rem;
+            margin: 0 0 10px 0;
+            text-align: center;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 16px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus {
+            border-color: #667eea;
+        }
+        
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        
+        button:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .export-btn {
+            background: #48bb78;
+            margin-bottom: 20px;
+        }
+        
+        .export-btn:hover {
+            background: #38a169;
+        }
+        
+        .results {
+            margin-top: 20px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .article-count {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        /* Mobile-friendly table - convert to cards on small screens */
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+            vertical-align: top;
+        }
+        
+        th {
+            background: #f7f7f7;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        tr:hover {
+            background: #f9f9f9;
+        }
+        
+        .article-title {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .article-link {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .article-link:hover {
+            text-decoration: underline;
+        }
+        
+        .inner-text {
+            max-width: 300px;
+            word-wrap: break-word;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .scraped-time {
+            font-size: 0.8rem;
+            color: #999;
+            white-space: nowrap;
+        }
+        
+        .error {
+            color: #e53e3e;
+            text-align: center;
+            padding: 20px;
+            background: #fed7d7;
+            border-radius: 12px;
+        }
+        
+        /* Card view for mobile (optional alternative to table) */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+            
+            .stats {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .export-btn {
+                margin-bottom: 0;
+            }
+            
+            /* Make table more readable on mobile */
+            th, td {
+                padding: 8px;
+                font-size: 0.85rem;
+            }
+            
+            .inner-text {
+                max-width: 200px;
+                font-size: 0.8rem;
+            }
+            
+            .scraped-time {
+                white-space: normal;
+                font-size: 0.7rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .table-container {
+                overflow-x: scroll;
+            }
+            
+            table {
+                min-width: 500px;
+            }
+        }
+        
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 1000;
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateX(-50%) translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
     </style>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
-    <h1>News Scraper</h1>
-    <div>
-        <input type="text" id="urlInput" placeholder="Enter URL (e.g., https://www.prothomalo.com/)" style="width: 60%;">
-        <button id="fetchBtn">Fetch News (up to 100 articles)</button>
-    </div>
-    <div class="results" id="results">
-        <p>Results will appear here...</p>
+    <div class="container">
+        <h1>📰 News Scraper</h1>
+        <div class="subtitle">Extract articles, headlines, and content from any news website</div>
+        
+        <div class="input-group">
+            <input type="text" id="urlInput" placeholder="Enter URL (e.g., https://www.prothomalo.com/)" autocomplete="off">
+            <button id="fetchBtn">🚀 Fetch News</button>
+        </div>
+        
+        <div class="results" id="results">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Enter a URL above to start scraping</p>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -34,14 +306,38 @@
         const resultsDiv = document.getElementById('results');
         let currentArticles = [];
 
+        // Show toast notification
+        function showToast(message, isError = false) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.style.background = isError ? '#e53e3e' : '#48bb78';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
         fetchBtn.addEventListener('click', async () => {
             const url = urlInput.value.trim();
             if (!url) {
-                alert('Please enter a URL');
+                showToast('Please enter a URL', true);
                 return;
             }
 
-            resultsDiv.innerHTML = '<p>⏳ Scraping up to 100 articles... This may take a minute or two.</p>';
+            // Validate URL
+            try {
+                new URL(url);
+            } catch (e) {
+                showToast('Please enter a valid URL (including https://)', true);
+                return;
+            }
+
+            resultsDiv.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>⏳ Scraping up to 100 articles... This may take a minute or two.</p>
+                    <p style="font-size: 0.8rem; margin-top: 10px;">Please don't close this tab</p>
+                </div>
+            `;
             currentArticles = [];
 
             try {
@@ -58,40 +354,60 @@
                 }
 
                 if (data.articles.length === 0) {
-                    resultsDiv.innerHTML = '<p>⚠️ No articles found on this page.</p>';
+                    resultsDiv.innerHTML = '<div class="error">⚠️ No articles found on this page. Try a different URL.</div>';
                     return;
                 }
 
                 currentArticles = data.articles;
+                showToast(`✅ Successfully scraped ${data.articles.length} articles!`);
 
-                let html = `<h3>Found ${data.articles.length} articles</h3>
-                            <button id="exportExcelBtn" class="export-btn">📊 Export to Excel</button>
-                             <table>
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Title</th>
-                                        <th>Link</th>
-                                        <th>Inner Text</th>
-                                        <th>Scraped Time</th>
-                                    </tr>
-                                </thead>
-                                <tbody>`;
+                let html = `
+                    <div class="stats">
+                        <div class="article-count">📊 Found ${data.articles.length} articles</div>
+                        <button id="exportExcelBtn" class="export-btn">📥 Export to Excel</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Title</th>
+                                    <th>Link</th>
+                                    <th>Content Preview</th>
+                                    <th>Scraped Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
                 data.articles.forEach((article, idx) => {
-                    html += `<tr>
-                                <td>${idx + 1}</td>
-                                <td><strong>${escapeHtml(article.title)}</strong></td>
-                                <td><a href="${article.link}" target="_blank">Link</a></td>
-                                <td>${escapeHtml(article.innerText)}</td>
-                                <td>${escapeHtml(article.scrapedTime || 'N/A')}</td>
-                             </tr>`;
+                    const preview = article.innerText.length > 150 
+                        ? article.innerText.substring(0, 150) + '...' 
+                        : article.innerText;
+                    
+                    html += `
+                        <tr>
+                            <td>${idx + 1}</td>
+                            <td class="article-title">${escapeHtml(article.title)}</td>
+                            <td><a href="${article.link}" target="_blank" class="article-link" rel="noopener noreferrer">🔗 View</a></td>
+                            <td class="inner-text">${escapeHtml(preview)}</td>
+                            <td class="scraped-time">${escapeHtml(article.scrapedTime || 'N/A')}</td>
+                        </tr>
+                    `;
                 });
-                html += `</tbody></table>`;
+                
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                
                 resultsDiv.innerHTML = html;
-
                 document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
+                
             } catch (error) {
-                resultsDiv.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+                resultsDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+                showToast(error.message, true);
             }
         });
 
@@ -102,12 +418,14 @@
                 if (m === '<') return '&lt;';
                 if (m === '>') return '&gt;';
                 return m;
+            }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+                return c;
             });
         }
 
         function exportToExcel() {
             if (!currentArticles || currentArticles.length === 0) {
-                alert('No data to export.');
+                showToast('No data to export', true);
                 return;
             }
 
@@ -124,7 +442,15 @@
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'Scraped News');
             XLSX.writeFile(wb, `scraped_news_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.xlsx`);
+            showToast('✅ Excel file downloaded!');
         }
+
+        // Allow Enter key to submit
+        urlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                fetchBtn.click();
+            }
+        });
     </script>
 </body>
 </html>
