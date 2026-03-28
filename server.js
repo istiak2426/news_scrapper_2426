@@ -6,7 +6,7 @@ const cheerio = require('cheerio');
 const app = express();
 
 app.get('/', (req, res) => {
-  res.send('Server is working');
+  res.sendFile(__dirname + '/public/index.html');
 });
 
 app.use(express.json());
